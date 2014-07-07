@@ -3,6 +3,24 @@ import numpy as np
 from random import uniform
 fig, ax = plt.subplots()
 
+class random: #変異モードの行動変化
+    def __init__(self, current_action):
+        if current_action == 0:
+            self.choice = (0.5 < uniform(0, 1)) * 1.0 + (0.5 >= uniform(0, 1)) * 0.0
+        elif current_action == 1:
+            self.choice = (0.5 < uniform(0, 1)) * (-1.0) + (0.5 >= uniform(0, 1)) * 0.0
+        else:
+            self.choice = 0.0
+
+class judge: #通常の利得判断モードの行動変化
+    def __init__(self, current_action):
+        if current_action == 0:
+            self.choice = (np.dot(A, (N - x[t] - 1, x[t]))).argmax()
+        elif current_action == 1:
+            self.choice = -1.0 + (np.dot(A, (N - x[t] - 1, x[t]))).argmax()
+        else:
+            self.choice = 0.0
+            
 A = ( (4, 0), 
       (3, 2) ) #利得行列
 N = 20
@@ -13,24 +31,13 @@ epsilon = 0.2
 x = [0.0]
 
 for t in range(T):
-    if x[t] / N > uniform(0, 1): #true=行動を選べる人が今時点で行動「１」を取っていた.
-        if epsilon > uniform(0, 1): #true=突然変異モード,false=通常の利得判定モード
-            if 0.5 > uniform(0, 1):
-                x.append(x[t])
-            else:
-                x.append(x[t] - 1)
-        else:
-            x.append(x[t] - 1 + (np.dot(A, (N - x[t], x[t] - 1))).argmax()) #利得判定：利得が同じ場合は若い番号の行動を採用
-    else:                        #false=行動を選べる人が今時点で行動「０」を取っていた.
-        if epsilon > uniform(0, 1):
-            if 0.5 > uniform(0, 1):
-                x.append(x[t])
-            else:
-                x.append(x[t] + 1)
-        else:
-            x.append(x[t] + (np.dot(A, (N - x[t] - 1, x[t]))).argmax())
+    current_action = x[t] / N > uniform(0, 1) #2x2の場合は行動が０か１なので、falseとtrueに対応させる。3x3にしたときはここを直す。
+    
+    if epsilon > uniform(0, 1): #trueだとrandom(変異モード）,falseだとjudge(通常の利得判断モード)。
+        mode = random(current_action)
+    else:
+        mode = judge(current_action)
+    x.append(x[t] + mode.choice)
+        
 ax.plot(x, 'r-')
 plt.show()
-        
-            
-
